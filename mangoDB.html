@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo App</title>
+</head>
+<body>
+  <h1>Todo List</h1>
+  <form id="taskForm">
+    <label for="title">Title:</label>
+    <input type="text" id="title" required>
+    <label for="description">Description:</label>
+    <textarea id="description"></textarea>
+    <button type="submit">Add Task</button>
+  </form>
+  <ul id="taskList"></ul>
+
+  <script>
+    const taskForm = document.getElementById('taskForm');
+    const taskList = document.getElementById('taskList');
+
+    // Function to fetch tasks and render them
+    async function fetchTasks() {
+      const response = await fetch('/tasks');
+      const tasks = await response.json();
+
+      taskList.innerHTML = '';
+      tasks.forEach(task => {
+        const li = document.createElement('li');
+        li.innerHTML = `<strong>${task.title}</strong>: ${task.description} 
+                        <button onclick="updateTask('${task._id}')">Update</button>
+                        <button onclick="deleteTask('${task._id}')">Delete</button>`;
+        taskList.appendChild(li);
+      });
+    }
+
+    // Function to add a new task
+    async function addTask(event) {
+      event.preventDefault();
+
+      const title = document.getElementById('title').value;
+      const description = document.getElementById('description').value;
+
+      await fetch('/tasks', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title, description }),
+      });
+
+      fetchTasks();
+    }
+
+    // Function to update a task
+    async function updateTask(id) {
+      const updatedTitle = prompt('Enter updated title:');
+      const updatedDescription = prompt('Enter updated description:');
+
+      await fetch(`/tasks/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ title: updatedTitle, description: updatedDescription }),
+      });
+
+      fetchTasks();
+    }
+
+    // Function to delete a task
+    async function deleteTask(id) {
+      await fetch(`/tasks/${id}`, { method: 'DELETE' });
+      fetchTasks();
+    }
+
+    taskForm.addEventListener('submit', addTask);
+    fetchTasks();
+  </script>
+</body>
+</html>
